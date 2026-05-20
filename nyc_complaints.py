@@ -23,11 +23,16 @@ def fetch_complaints(borough):
     data = response.json()
     return data
 
+def pretty_print(borough, data):
+    print(f"Top 10 Complaints for  {borough} over last 30 days")
+    for i, complaint in enumerate(data, start=1):
+        print(f"{i}. {complaint['complaint_type']}: {complaint['count']}" )
+
 def main():
     args = parse_args()
     borough = args.borough
     data = fetch_complaints(borough)
-    print(data)
+    pretty_print(borough, data)
     
 if __name__ == "__main__":
     main()
