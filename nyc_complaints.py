@@ -33,11 +33,21 @@ def parse_args():
         description="Summarize recent NYC 311 complaints."
     )
 
-    parser.add_argument(
+    location_group = parser.add_mutually_exclusive_group(required=True)
+
+    location_group.add_argument(
         "--borough",
          default=None,
          choices=BOROUGHS,
          help="Only include complaints from this borough."
+    )
+
+    location_group.add_argument(
+        "--zip",
+        dest="zip_code",
+        default=None,
+        type=str,
+        help="Only include complaints from this zip code."
     )
 
     parser.add_argument(
@@ -65,6 +75,7 @@ def parse_args():
 
 def create_params(args):
     borough = args.borough
+    zip_code = args.zip_code
     days = args.days
     top = args.top
     mincount = args.min_count
@@ -73,6 +84,9 @@ def create_params(args):
     where = f"created_date >= '{start_date_string}'"
     if borough is not None:
         where += f" AND borough = '{borough}'"
+    if zip_code is not None:
+        where += f" AND incident_zip = '{zip_code}'"
+
     params = {
         "$select": "complaint_type, count(*) AS count",
         "$where": where,
