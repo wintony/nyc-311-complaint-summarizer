@@ -2,7 +2,15 @@ import argparse
 import requests
 from datetime import datetime, timedelta
 
-url = "https://data.cityofnewyork.us/resource/erm2-nwe9.json"
+API_URL = "https://data.cityofnewyork.us/resource/erm2-nwe9.json"
+
+BOROUGHS = {
+    "BRONX",
+    "BROOKLYN",
+    "MANHATTAN",
+    "QUEENS",
+    "STATEN ISLAND",
+}
 
 def int_between(min_value=None, max_value=None):
     def checker(value):
@@ -21,18 +29,45 @@ def int_between(min_value=None, max_value=None):
     return checker
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--borough", default=None, choices={"BRONX", "BROOKLYN", "MANHATTAN", "STATEN ISLAND", "QUEENS"})
-    parser.add_argument("--days", type=int_between(2, 365), default=30)
-    parser.add_argument("--limit", type=int_between(1, None), default=None)
-    parser.add_argument("--mincount", type=int, default=0)
+    parser = argparse.ArgumentParser(
+        description="Summarize recent NYC 311 complaints."
+    )
+
+    parser.add_argument(
+        "--borough",
+         default=None,
+         choices=BOROUGHS,
+         help="Only include complaints from this borough."
+    )
+
+    parser.add_argument(
+        "--days",
+        type=int_between(2, 365),
+        default=7,
+        help="Number of recent days to query. Default: 7. Must be between 2 and 365,"
+    )
+
+    parser.add_argument(
+        "--top",
+        type=int_between(1, None),
+        default=None,
+        help="Maximum number of complaint types to show. If ommitted, show all."
+    )
+
+    parser.add_argument(
+        "--min-count",
+        type=int,
+        default=0,
+        help="Only show complaint types with at least this many reports."
+    )
+
     return parser.parse_args()
 
 def create_params(args):
     borough = args.borough
     days = args.days
-    limit = args.limit
-    mincount = args.mincount
+    top = args.top
+    mincount = args.min_count
     start_date = datetime.now() - timedelta(days=days)
     start_date_string = start_date.strftime("%Y-%m-%dT%H:%M:%S")
     where = f"created_date >= '{start_date_string}'"
@@ -44,12 +79,12 @@ def create_params(args):
         "$group": f"complaint_type HAVING count >= {mincount}",
         "$order": "count DESC",
     }
-    if limit is not None:
-        params["$limit"] = limit
+    if top is not None:
+        params["$limit"] = top
     return params
 
 def fetch_complaints(params):
-    response = requests.get(url, params=params)
+    response = requests.get(API_URL, params=params)
     data = response.json()
     return data
 
