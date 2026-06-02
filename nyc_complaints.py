@@ -33,6 +33,12 @@ def validate_zip_code(value):
         raise argparse.ArgumentTypeError("must be a 5-digit ZIP code")
     return value
 
+def validate_borough(value):
+    borough = value.strip().upper()
+    if borough not in BOROUGHS:
+        raise argparse.ArgumentTypeError(f"must be one of: {', '.join(BOROUGHS)}")
+    return borough
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Summarize recent NYC 311 complaints."
@@ -43,7 +49,7 @@ def parse_args():
     location_group.add_argument(
         "--borough",
          default=None,
-         choices=BOROUGHS,
+         type=validate_borough,
          help="Only include complaints from this borough."
     )
 
@@ -116,7 +122,7 @@ def pretty_print(args, data):
         return
     else:
         if args.borough:
-            location = args.borough
+            location = args.borough.title()
         elif args.zip_code:
             location = args.zip_code
         else:
