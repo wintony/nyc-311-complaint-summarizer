@@ -28,6 +28,11 @@ def int_between(min_value=None, max_value=None):
         return value
     return checker
 
+def validate_zip_code(value):
+    if not value.isdigit() or len(value) != 5:
+        raise argparse.ArgumentTypeError("must be a 5-digit ZIP code")
+    return value
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Summarize recent NYC 311 complaints."
@@ -46,7 +51,7 @@ def parse_args():
         "--zip",
         dest="zip_code",
         default=None,
-        type=str,
+        type=validate_zip_code,
         help="Only include complaints from this ZIP code."
     )
 
@@ -66,9 +71,9 @@ def parse_args():
 
     parser.add_argument(
         "--min-count",
-        type=int,
-        default=0,
-        help="Only show complaint types with at least this many reports. Default: 0."
+        type=int_between(1, None),
+        default=1,
+        help="Only show complaint types with at least this many reports. Default: 1."
     )
 
     return parser.parse_args()
