@@ -36,6 +36,8 @@ python nyc_complaints.py
 
 By default, this summarizes complaint types across all of NYC over the last 7 days.
 
+You can also pass optional arguments to customize the results.
+
 Example:
 
 ```bash
@@ -45,7 +47,7 @@ python nyc_complaints.py --borough BROOKLYN --days 30 --top 3
 Example output:
 
 ```text
-Top 311 complaints in BROOKLYN over the last 30 days
+Top 311 complaints in Brooklyn over the last 30 days
 
 1. Illegal Parking: 20280
 2. Noise - Residential: 10372 
