@@ -33,7 +33,7 @@ def parse_args():
         description="Summarize recent NYC 311 complaints."
     )
 
-    location_group = parser.add_mutually_exclusive_group(required=True)
+    location_group = parser.add_mutually_exclusive_group()
 
     location_group.add_argument(
         "--borough",
@@ -47,28 +47,28 @@ def parse_args():
         dest="zip_code",
         default=None,
         type=str,
-        help="Only include complaints from this zip code."
+        help="Only include complaints from this ZIP code."
     )
 
     parser.add_argument(
         "--days",
         type=int_between(2, 365),
         default=7,
-        help="Number of recent days to query. Default: 7. Must be between 2 and 365,"
+        help="Number of recent days to query. Default: 7. Must be between 2 and 365."
     )
 
     parser.add_argument(
         "--top",
         type=int_between(1, None),
         default=None,
-        help="Maximum number of complaint types to show. If ommitted, show all."
+        help="Maximum number of complaint types to show. If omitted, show all."
     )
 
     parser.add_argument(
         "--min-count",
         type=int,
         default=0,
-        help="Only show complaint types with at least this many reports."
+        help="Only show complaint types with at least this many reports. Default: 0."
     )
 
     return parser.parse_args()
@@ -98,20 +98,33 @@ def create_params(args):
     return params
 
 def fetch_complaints(params):
-    response = requests.get(API_URL, params=params)
-    data = response.json()
-    return data
+    try:
+        response = requests.get(API_URL, params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as error:
+        print(f"Error fetching data: {error}")
+        return []
 
-def pretty_print(days, data):
-    for i, complaint in enumerate(data, start=1):
-        print(f"{i}. {complaint['complaint_type']}: {complaint['count']}" )
+def pretty_print(args, data):
+    if len(data) == 0:
+        return
+    else:
+        if args.borough:
+            location = args.borough
+        elif args.zip_code:
+            location = args.zip_code
+        else:
+            location = "NYC"
+        print(f"Top 311 complaints in {location} over the last {args.days} days\n")
+        for i, complaint in enumerate(data, start=1):
+            print(f"{i}. {complaint['complaint_type']}: {complaint['count']}" )
 
 def main():
     args = parse_args()
     params = create_params(args)
     data = fetch_complaints(params)
-    days = args.days
-    pretty_print(days, data)
+    pretty_print(args, data)
     
 if __name__ == "__main__":
     main()
