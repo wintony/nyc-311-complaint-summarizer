@@ -110,16 +110,18 @@ def create_params(args):
 
 def fetch_complaints(params):
     try:
-        response = requests.get(API_URL, params=params)
+        response = requests.get(API_URL, params=params, timeout=60)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as error:
         print(f"Error fetching data: {error}")
-        return []
+        return None
 
 def pretty_print(args, data):
-    if len(data) == 0:
-        return
+    if data is None:
+        print("Could not retrieve complaints due to an API error.")
+    elif len(data) == 0:
+        print("No complaints found for those filters.")
     else:
         if args.borough:
             location = args.borough.title()
